@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Website</title>
+  <style>
+    /* CSS styles */
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .post {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .post h2 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .post p {
+      margin-top: 5px;
+    }
+
+    .form {
+      margin-top: 20px;
+    }
+
+    .form input[type="text"],
+    .form textarea {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+
+    .form button {
+      padding: 5px 10px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    .animate-post {
+      animation: floatFromForm 1s;
+    }
+
+    .reply-form {
+      margin-top: 10px;
+    }
+
+    .reply-form input[type="text"] {
+      width: 100%;
+      padding: 5px;
+    }
+
+    .reply-form button {
+      padding: 2px 9px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    .author {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 12px;
+      color: green;
+    }
+
+    .reply {
+      margin-top: 10px;
+      margin-left: 20px;
+      border-left: 1px solid #ccc;
+      padding-left: 10px;
+      position: relative;
+    }
+
+    .replies {
+      margin-top: 10px;
+    }
+
+    .delete-button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: #FF0000;
+      color: #FFF;
+      border: none;
+      cursor: pointer;
+      padding: 2px 5px;
+    }
+
+    .delete-reply-button {
+      background-color: #FF0000;
+      color: #FFF;
+      border: none;
+      cursor: pointer;
+      padding: 2px 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Website</h1>
+
+    <!-- Forum section -->
+    <section id="forum">
+      <h2>Forum</h2>
+
+      <div id="posts"></div>
+
+      <div class="form">
+        <h2>Create a new post</h2>
+        <input type="text" id="title" placeholder="Title">
+        <textarea id="content" placeholder="Content"></textarea>
+        <button onclick="createPost()">Post</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // JavaScript code
+    var posts = []; // Array to store the forum posts
+    var replyCount = 1; // Counter for reply IDs
+
+    function createPost() {
+      var title = document.getElementById('title').value;
+      var content = document.getElementById('content').value;
+
+      // Check if the post content is empty before posting
+      if (title.trim().length === 0 || content.trim().length === 0) {
+        alert('Please enter title and content to post.');
+        return;
+      }
+
+      var post = {
+        title: title,
+        content: content,
+        author: 'Anonymous',
+        id: generateRandomId(),
+        replies: []
+      };
+
+      posts.push(post);
+
+      renderPosts();
+
+      document.getElementById('title').value = '';
+      document.getElementById('content').value = '';
+
+      animatePost();
+    }
+
+    function deletePost(postIndex) {
+      posts.splice(postIndex, 1);
+      renderPosts();
+    }
+
+    function createReply(postIndex) {
+      var replyInput = document.getElementById('reply' + postIndex);
+      var replyContent = replyInput.value;
+
+      // Check if the reply content is empty before posting
+      if (replyContent.trim().length === 0) {
+        alert('Please enter a reply.');
+        return;
+      }
+
+      var post = posts[postIndex];
+      var reply = {
+        content: replyContent,
+        author: 'Anonymous',
+        id: generateRandomId()
+      };
+      post.replies.push(reply);
+
+      renderPosts();
+
+      replyInput.value = '';
+    }
+
+    function deleteReply(postIndex, replyIndex) {
+      var post = posts[postIndex];
+      post.replies.splice(replyIndex, 1);
+      renderPosts();
+    }
+
+    function renderPosts() {
+      var postsContainer = document.getElementById('posts');
+      postsContainer.innerHTML = '';
+
+      posts.forEach(function(post, index) {
+        var postElement = document.createElement('div');
+        postElement.className = 'post';
+        postElement.innerHTML =
+          '<h2>' + post.title + '</h2>' +
+          '<p>' + post.content + '</p>' +
+          '<div class="author">' + post.author + ' #' + post.id + '</div>' +
+          '<button class="delete-button" onclick="deletePost(' + index + ')">Delete</button>';
+
+        var replyForm = createReplyForm(index);
+        postElement.appendChild(replyForm);
+
+        var repliesElement = document.createElement('div');
+        repliesElement.className = 'replies';
+        renderReplies(post.replies, repliesElement, index);
+        postElement.appendChild(repliesElement);
+
+        postsContainer.appendChild(postElement);
+      });
+    }
+
+    function createReplyForm(postIndex) {
+      var replyForm = document.createElement('div');
+      replyForm.className = 'reply-form';
+      replyForm.innerHTML =
+        '<input type="text" id="reply' + postIndex + '" placeholder="Your Reply">' +
+        '<button onclick="createReply(' + postIndex + ')">Reply</button>';
+
+      return replyForm;
+    }
+
+    function renderReplies(replies, parentElement, postIndex) {
+      replies.forEach(function(reply, index) {
+        var replyElement = document.createElement('div');
+        replyElement.className = 'reply';
+        replyElement.innerHTML =
+          '<div class="author">' + reply.author + ' #' + reply.id + '</div>' +
+          reply.content +
+          '<button class="delete-reply-button" onclick="deleteReply(' + postIndex + ', ' + index + ')">Delete</button>';
+
+        parentElement.appendChild(replyElement);
+      });
+    }
+
+    function animatePost() {
+      var postsContainer = document.getElementById('posts');
+      var postElements = postsContainer.getElementsByClassName('post');
+      var latestPostElement = postElements[postElements.length - 1];
+
+      latestPostElement.classList.add('animate-post');
+    }
+
+    function generateRandomId() {
+      return Math.floor(Math.random() * 1000000);
+    }
+
+    // Initial rendering of the posts
+    renderPosts();
+  </script>
+</body>
+</html>
